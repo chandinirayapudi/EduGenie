@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title if page_title else "EduGenie – Google Gemini Powered Learning Assistant" }}</title>
+    <!-- Google Fonts for modern clean typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="/" class="brand-logo">
+                <span class="logo-icon">✨</span>
+                <span class="logo-text">Edu<strong>Genie</strong></span>
+                <span class="badge badge-subtle">AI Assistant</span>
+            </a>
+            <nav class="nav-links">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/qa" class="nav-link">Q&A</a>
+                <a href="/explain" class="nav-link">Explain</a>
+                <a href="/quiz" class="nav-link">Quiz</a>
+                <a href="/summarize" class="nav-link">Summarize</a>
+                <a href="/learn" class="nav-link">Learning Path</a>
+            </nav>
+            <div class="nav-meta">
+                <span class="status-indicator online"></span>
+                <span class="status-text">Ready</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        {% if error %}
+        <div class="alert alert-error">
+            <span class="alert-icon">⚠️</span>
+            <div class="alert-content">
+                <strong>Attention:</strong> {{ error }}
+            </div>
+        </div>
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <span class="logo-icon">✨</span>
+                <strong>EduGenie</strong>
+                <p>Google Gemini & LaMini-Flan-T5 Powered Educational Assistant for Curious Learners.</p>
+            </div>
+            <div class="footer-meta">
+                <span>FastAPI • SQLite • PyTorch • Hugging Face</span>
+                <span>Certificate Project</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

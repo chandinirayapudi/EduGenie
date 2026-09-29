@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="tool-layout">
+    <div class="tool-main">
+        <div class="tool-header">
+            <div class="tool-badge bg-rose-subtle">🗺️ Feature 5</div>
+            <h1>Personalized Learning Path</h1>
+            <p>Get a step-by-step curriculum with recommended topics and actionable study techniques tailored to your current skill level.</p>
+        </div>
+
+        <div class="card form-card">
+            <form id="learnForm" method="POST" action="/learn">
+                <div class="form-row">
+                    <div class="form-group flex-2">
+                        <label for="topic">Subject or Skill to Learn</label>
+                        <input 
+                            type="text" 
+                            id="topic" 
+                            name="topic" 
+                            placeholder="e.g. SQL, Data Structures, Quantum Physics, Spanish Grammar"
+                            value="{{ topic if topic else '' }}"
+                            required
+                            class="form-control"
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <div class="form-group flex-1">
+                        <label for="level">Target Level</label>
+                        <select id="level" name="level" class="form-control form-select">
+                            <option value="Beginner" {% if not level or level == 'Beginner' %}selected{% endif %}>🟢 Beginner</option>
+                            <option value="Intermediate" {% if level == 'Intermediate' %}selected{% endif %}>🟡 Intermediate</option>
+                            <option value="Advanced" {% if level == 'Advanced' %}selected{% endif %}>🔴 Advanced</option>
+                        </select>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-rose" id="learnSubmitBtn">
+                            <span class="btn-text">Generate Path</span>
+                            <span class="btn-spinner" style="display: none;">⏳ Mapping...</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Result Section -->
+        <div id="learnResultSection" class="result-container" {% if not result %}style="display: none;"{% endif %}>
+            {% if result %}
+            <div class="card result-card">
+                <div class="result-header">
+                    <div class="result-title-group">
+                        <span class="result-tag tag-rose">Roadmap</span>
+                        <h2 class="result-question">{{ result.topic }}</h2>
+                        <span class="badge badge-level">{{ result.level }}</span>
+                    </div>
+                    <span class="badge badge-model">{{ result.model_used }}</span>
+                </div>
+
+                <div class="result-body markdown-content learning-path-body">
+                    {{ result.learning_path | replace('\n', '<br>') | safe }}
+                </div>
+
+                <div class="result-footer">
+                    <span class="text-muted">Query ID: #{{ result.query_id }}</span>
+                    <button class="btn btn-sm btn-secondary" onclick="navigator.clipboard.writeText(`{{ result.learning_path }}`)">📋 Copy Roadmap</button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Paths Sidebar -->
+    <aside class="tool-sidebar">
+        <div class="card sidebar-card">
+            <h3>Recent Roadmaps</h3>
+            {% if recent_paths %}
+            <ul class="recent-list">
+                {% for p in recent_paths %}
+                <li class="recent-item">
+                    <div class="recent-path-header">
+                        <strong>{{ p.Topic }}</strong>
+                        <span class="badge-mini badge-{{ p.Level.lower() }}">{{ p.Level }}</span>
+                    </div>
+                    <span class="recent-date">{{ p.CreatedAt.strftime('%b %d, %H:%M') }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">No learning paths generated yet.</p>
+            {% endif %}
+        </div>
+    </aside>
+</div>
+{% endblock %}

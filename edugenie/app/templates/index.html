@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="hero-badge">🎓 AI-Powered Educational Companion</div>
+    <h1 class="hero-title">Welcome to <span class="gradient-text">EduGenie</span></h1>
+    <p class="hero-subtitle">
+        Empowering students, self-learners, and educators with intelligent Q&A, crystal-clear concept breakdowns, interactive quizzes, text summarization, and custom learning roadmaps.
+    </p>
+
+    {% if not gemini_ready %}
+    <div class="alert alert-warning">
+        <span class="alert-icon">💡</span>
+        <div class="alert-content">
+            <strong>Gemini API Key Notice:</strong> No active <code>GEMINI_API_KEY</code> was detected in your <code>.env</code> file. Add your key to enable cloud-based generation or select the local LaMini-Flan-T5 model for local experiments.
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-number">{{ total_queries }}</span>
+            <span class="stat-label">Total Inquiries</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ total_quizzes }}</span>
+            <span class="stat-label">Questions Stored</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ total_summaries }}</span>
+            <span class="stat-label">Summaries Made</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ total_paths }}</span>
+            <span class="stat-label">Learning Paths</span>
+        </div>
+    </div>
+</section>
+
+<section class="features-section">
+    <h2 class="section-title">Explore Learning Tools</h2>
+    <p class="section-subtitle">Select a tool to accelerate your learning journey</p>
+
+    <div class="features-grid">
+        <!-- Feature 1: Q&A -->
+        <a href="/qa" class="feature-card">
+            <div class="feature-icon-wrapper bg-blue">
+                <span>💬</span>
+            </div>
+            <div class="feature-content">
+                <h3>Ask Question</h3>
+                <p>Pose academic questions and receive concise, helpful answers enriched with educational context.</p>
+                <span class="feature-action">Launch Q&A &rarr;</span>
+            </div>
+        </a>
+
+        <!-- Feature 2: Explain Concept -->
+        <a href="/explain" class="feature-card">
+            <div class="feature-icon-wrapper bg-purple">
+                <span>🧠</span>
+            </div>
+            <div class="feature-content">
+                <h3>Explain Concept</h3>
+                <p>Deconstruct complex theories, algorithms, or formulas into clear definitions and real-world analogies.</p>
+                <span class="feature-action">Explain Concept &rarr;</span>
+            </div>
+        </a>
+
+        <!-- Feature 3: Generate Quiz -->
+        <a href="/quiz" class="feature-card">
+            <div class="feature-icon-wrapper bg-amber">
+                <span>📝</span>
+            </div>
+            <div class="feature-content">
+                <h3>Generate Quiz</h3>
+                <p>Create interactive multiple-choice quizzes with instant grading, explanations, and scoring.</p>
+                <span class="feature-action">Take Quiz &rarr;</span>
+            </div>
+        </a>
+
+        <!-- Feature 4: Summarize -->
+        <a href="/summarize" class="feature-card">
+            <div class="feature-icon-wrapper bg-emerald">
+                <span>📄</span>
+            </div>
+            <div class="feature-content">
+                <h3>Summarize Text</h3>
+                <p>Distill lengthy papers, textbook chapters, and articles into bulleted key takeaways and overviews.</p>
+                <span class="feature-action">Summarize &rarr;</span>
+            </div>
+        </a>
+
+        <!-- Feature 5: Learning Path -->
+        <a href="/learn" class="feature-card">
+            <div class="feature-icon-wrapper bg-rose">
+                <span>🗺️</span>
+            </div>
+            <div class="feature-content">
+                <h3>Learning Path</h3>
+                <p>Generate step-by-step personalized roadmaps for Beginner, Intermediate, or Advanced masteries.</p>
+                <span class="feature-action">Create Roadmap &rarr;</span>
+            </div>
+        </a>
+    </div>
+</section>
+
+{% if recent_activity %}
+<section class="activity-section">
+    <h2 class="section-title">Recent Learning Activity</h2>
+    <div class="activity-list">
+        {% for act in recent_activity %}
+        <div class="activity-item">
+            <span class="activity-badge badge-{{ act.QueryType }}">{{ act.QueryType | upper }}</span>
+            <span class="activity-text">{{ act.QueryText }}</span>
+            <span class="activity-time">{{ act.CreatedAt.strftime('%b %d, %H:%M') }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}

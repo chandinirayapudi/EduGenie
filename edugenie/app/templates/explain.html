@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="tool-layout">
+    <div class="tool-main">
+        <div class="tool-header">
+            <div class="tool-badge bg-purple-subtle">🧠 Feature 2</div>
+            <h1>Understand Difficult Concepts</h1>
+            <p>Demystify complex formulas, scientific laws, and abstract theories with straightforward explanations and real-world examples.</p>
+        </div>
+
+        <div class="card form-card">
+            <form id="explainForm" method="POST" action="/explain">
+                <div class="form-group">
+                    <label for="concept">Concept or Topic to Explain</label>
+                    <input 
+                        type="text" 
+                        id="concept" 
+                        name="concept" 
+                        placeholder="e.g. Pythagoras theorem, Heisenberg uncertainty principle, DNS lookup"
+                        value="{{ concept if concept else '' }}"
+                        required
+                        class="form-control"
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="model_choice">AI Engine</label>
+                        <select id="model_choice" name="model_choice" class="form-control form-select">
+                            <option value="gemini" {% if not model_choice or model_choice == 'gemini' %}selected{% endif %}>
+                                Google Gemini (Cloud • Recommended)
+                            </option>
+                            <option value="lamini" {% if model_choice == 'lamini' %}selected{% endif %}>
+                                LaMini-Flan-T5 (Local Hugging Face)
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-purple" id="explainSubmitBtn">
+                            <span class="btn-text">Explain Simply</span>
+                            <span class="btn-spinner" style="display: none;">⏳ Analyzing...</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Result Section -->
+        <div id="explainResultSection" class="result-container" {% if not result %}style="display: none;"{% endif %}>
+            {% if result %}
+            <div class="card result-card">
+                <div class="result-header">
+                    <div class="result-title-group">
+                        <span class="result-tag tag-purple">Concept</span>
+                        <h3 class="result-question">{{ result.concept }}</h3>
+                    </div>
+                    <span class="badge badge-model">{{ result.model_used }}</span>
+                </div>
+                <div class="result-body markdown-content">
+                    <div class="explanation-box">
+                        {{ result.explanation | replace('\n', '<br>') | safe }}
+                    </div>
+                </div>
+                <div class="result-footer">
+                    <span class="text-muted">Query ID: #{{ result.query_id }}</span>
+                    <button class="btn btn-sm btn-secondary" onclick="navigator.clipboard.writeText(`{{ result.explanation }}`)">📋 Copy Explanation</button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Concepts Sidebar -->
+    <aside class="tool-sidebar">
+        <div class="card sidebar-card">
+            <h3>Recent Concepts</h3>
+            {% if recent_queries %}
+            <ul class="recent-list">
+                {% for q in recent_queries %}
+                <li class="recent-item">
+                    <p class="recent-text">{{ q.QueryText }}</p>
+                    <span class="recent-date">{{ q.CreatedAt.strftime('%b %d, %H:%M') }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">No concepts explored yet. Try searching one!</p>
+            {% endif %}
+        </div>
+    </aside>
+</div>
+{% endblock %}

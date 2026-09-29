@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="tool-layout">
+    <div class="tool-main">
+        <div class="tool-header">
+            <div class="tool-badge bg-emerald-subtle">📄 Feature 4</div>
+            <h1>Summarize Educational Content</h1>
+            <p>Paste long articles, study notes, or textbook passages to extract clear summaries, key bullet points, and core takeaways.</p>
+        </div>
+
+        <div class="card form-card">
+            <form id="summarizeForm" method="POST" action="/summarize">
+                <div class="form-group">
+                    <label for="text">Educational Text to Summarize</label>
+                    <textarea 
+                        id="text" 
+                        name="text" 
+                        rows="7"
+                        placeholder="Paste your article, lecture transcript, or study material here..."
+                        required
+                        class="form-control"
+                    >{{ text if text else '' }}</textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="model_choice">AI Engine</label>
+                        <select id="model_choice" name="model_choice" class="form-control form-select">
+                            <option value="gemini" {% if not model_choice or model_choice == 'gemini' %}selected{% endif %}>
+                                Google Gemini (Cloud • Recommended)
+                            </option>
+                            <option value="lamini" {% if model_choice == 'lamini' %}selected{% endif %}>
+                                LaMini-Flan-T5 (Local Hugging Face)
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-emerald" id="summarizeSubmitBtn">
+                            <span class="btn-text">Generate Summary</span>
+                            <span class="btn-spinner" style="display: none;">⏳ Summarizing...</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Result Section -->
+        <div id="summarizeResultSection" class="result-container" {% if not result %}style="display: none;"{% endif %}>
+            {% if result %}
+            <div class="card result-card">
+                <div class="result-header">
+                    <div class="result-title-group">
+                        <span class="result-tag tag-emerald">Summary Generated</span>
+                        <div class="metrics-row">
+                            <span class="badge badge-subtle">Original: {{ result.original_word_count }} words</span>
+                            <span class="badge badge-success">Summary: {{ result.summary_word_count }} words</span>
+                        </div>
+                    </div>
+                    <span class="badge badge-model">{{ result.model_used }}</span>
+                </div>
+
+                <div class="summary-split-view">
+                    <!-- Generated Summary -->
+                    <div class="summary-panel primary-panel">
+                        <h4>✨ Key Summary</h4>
+                        <div class="summary-body markdown-content">
+                            {{ result.summary_text | replace('\n', '<br>') | safe }}
+                        </div>
+                    </div>
+
+                    <!-- Original Text Preview -->
+                    <div class="summary-panel secondary-panel">
+                        <h4>📖 Original Source Text</h4>
+                        <div class="original-body">
+                            {{ result.original_text }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-footer">
+                    <span class="text-muted">Query ID: #{{ result.query_id }}</span>
+                    <button class="btn btn-sm btn-secondary" onclick="navigator.clipboard.writeText(`{{ result.summary_text }}`)">📋 Copy Summary</button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Summaries Sidebar -->
+    <aside class="tool-sidebar">
+        <div class="card sidebar-card">
+            <h3>Recent Summaries</h3>
+            {% if recent_summaries %}
+            <ul class="recent-list">
+                {% for s in recent_summaries %}
+                <li class="recent-item">
+                    <p class="recent-text">{{ s.OriginalText[:90] }}...</p>
+                    <span class="recent-date">{{ s.CreatedAt.strftime('%b %d, %H:%M') }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">No summaries created yet.</p>
+            {% endif %}
+        </div>
+    </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="tool-layout">
+    <div class="tool-main">
+        <div class="tool-header">
+            <div class="tool-badge bg-blue-subtle">💬 Feature 1</div>
+            <h1>Ask Educational Questions</h1>
+            <p>Get clear, pedagogical answers designed to build your knowledge without unnecessary fluff.</p>
+        </div>
+
+        <div class="card form-card">
+            <form id="qaForm" method="POST" action="/qa">
+                <div class="form-group">
+                    <label for="question">Your Question</label>
+                    <input 
+                        type="text" 
+                        id="question" 
+                        name="question" 
+                        placeholder="e.g. Which is the largest ocean and why is it important?"
+                        value="{{ question if question else '' }}"
+                        required
+                        class="form-control"
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="model_choice">AI Engine</label>
+                        <select id="model_choice" name="model_choice" class="form-control form-select">
+                            <option value="gemini" {% if not model_choice or model_choice == 'gemini' %}selected{% endif %}>
+                                Google Gemini (Cloud • Recommended)
+                            </option>
+                            <option value="lamini" {% if model_choice == 'lamini' %}selected{% endif %}>
+                                LaMini-Flan-T5 (Local Hugging Face)
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="qaSubmitBtn">
+                            <span class="btn-text">Get Answer</span>
+                            <span class="btn-spinner" style="display: none;">⏳ Thinking...</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Result Section -->
+        <div id="qaResultSection" class="result-container" {% if not result %}style="display: none;"{% endif %}>
+            {% if result %}
+            <div class="card result-card">
+                <div class="result-header">
+                    <div class="result-title-group">
+                        <span class="result-tag">Question</span>
+                        <h3 class="result-question">{{ result.question }}</h3>
+                    </div>
+                    <span class="badge badge-model">{{ result.model_used }}</span>
+                </div>
+                <div class="result-body markdown-content">
+                    <div class="answer-box">
+                        {{ result.answer | replace('\n', '<br>') | safe }}
+                    </div>
+                </div>
+                <div class="result-footer">
+                    <span class="text-muted">Query ID: #{{ result.query_id }}</span>
+                    <button class="btn btn-sm btn-secondary" onclick="navigator.clipboard.writeText(`{{ result.answer }}`)">📋 Copy Answer</button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Queries Sidebar -->
+    <aside class="tool-sidebar">
+        <div class="card sidebar-card">
+            <h3>Recent Q&A</h3>
+            {% if recent_queries %}
+            <ul class="recent-list">
+                {% for q in recent_queries %}
+                <li class="recent-item">
+                    <p class="recent-text">{{ q.QueryText }}</p>
+                    <span class="recent-date">{{ q.CreatedAt.strftime('%b %d, %H:%M') }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">No recent questions yet. Be the first to ask!</p>
+            {% endif %}
+        </div>
+    </aside>
+</div>
+{% endblock %}

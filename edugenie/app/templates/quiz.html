@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="tool-layout">
+    <div class="tool-main tool-main-wide">
+        <div class="tool-header">
+            <div class="tool-badge bg-amber-subtle">📝 Feature 3</div>
+            <h1>Generate Interactive Quizzes</h1>
+            <p>Test your understanding on any academic topic. Select your answers and get immediate scoring and explanations.</p>
+        </div>
+
+        <div class="card form-card">
+            <form id="quizForm" method="POST" action="/quiz">
+                <div class="form-row">
+                    <div class="form-group flex-2">
+                        <label for="topic">Quiz Topic</label>
+                        <input 
+                            type="text" 
+                            id="topic" 
+                            name="topic" 
+                            placeholder="e.g. Python loops, Photosynthesis, French Revolution, Calculus derivatives"
+                            value="{{ topic if topic else '' }}"
+                            required
+                            class="form-control"
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <div class="form-group flex-1">
+                        <label for="num_questions">Questions</label>
+                        <select id="num_questions" name="num_questions" class="form-control form-select">
+                            <option value="3" {% if num_questions == 3 %}selected{% endif %}>3 Questions (Quick)</option>
+                            <option value="5" {% if not num_questions or num_questions == 5 %}selected{% endif %}>5 Questions (Standard)</option>
+                            <option value="8" {% if num_questions == 8 %}selected{% endif %}>8 Questions (Deep)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-amber" id="quizSubmitBtn">
+                            <span class="btn-text">Generate Quiz</span>
+                            <span class="btn-spinner" style="display: none;">⏳ Crafting...</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Quiz Container -->
+        <div id="quizContainer" class="result-container" {% if not result %}style="display: none;"{% endif %}>
+            {% if result %}
+            <div class="card quiz-card">
+                <div class="quiz-header">
+                    <div>
+                        <span class="result-tag tag-amber">Quiz Topic</span>
+                        <h2 class="quiz-topic-title">{{ result.topic }}</h2>
+                    </div>
+                    <div class="quiz-stats">
+                        <span class="badge badge-subtle">{{ result.questions | length }} Questions</span>
+                        <span class="badge badge-model">{{ result.model_used }}</span>
+                    </div>
+                </div>
+
+                <!-- Score Board (hidden initially until submitted) -->
+                <div id="scoreBanner" class="score-banner" style="display: none;">
+                    <div class="score-trophy">🏆</div>
+                    <div class="score-info">
+                        <h3>Your Score: <span id="scoreDisplay">0 / 0</span> (<span id="scorePercent">0%</span>)</h3>
+                        <p id="scoreFeedback">Review the highlighted answers below to reinforce your knowledge.</p>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="retakeQuiz()">🔄 Retake Quiz</button>
+                </div>
+
+                <form id="interactiveQuizForm" onsubmit="event.preventDefault(); gradeQuiz();">
+                    <div class="quiz-questions-list">
+                        {% for q in result.questions %}
+                        {% set q_idx = loop.index0 %}
+                        <div class="quiz-question-box" id="question-box-{{ q_idx }}" data-correct="{{ q.correct_option }}">
+                            <div class="question-header">
+                                <span class="q-number">Q{{ loop.index }}</span>
+                                <h4 class="q-text">{{ q.question }}</h4>
+                            </div>
+                            <div class="options-grid">
+                                <label class="option-pill" id="pill-{{ q_idx }}-A">
+                                    <input type="radio" name="q_{{ q_idx }}" value="A" required>
+                                    <span class="option-letter">A</span>
+                                    <span class="option-label">{{ q.option_a }}</span>
+                                </label>
+                                <label class="option-pill" id="pill-{{ q_idx }}-B">
+                                    <input type="radio" name="q_{{ q_idx }}" value="B" required>
+                                    <span class="option-letter">B</span>
+                                    <span class="option-label">{{ q.option_b }}</span>
+                                </label>
+                                <label class="option-pill" id="pill-{{ q_idx }}-C">
+                                    <input type="radio" name="q_{{ q_idx }}" value="C" required>
+                                    <span class="option-letter">C</span>
+                                    <span class="option-label">{{ q.option_c }}</span>
+                                </label>
+                                <label class="option-pill" id="pill-{{ q_idx }}-D">
+                                    <input type="radio" name="q_{{ q_idx }}" value="D" required>
+                                    <span class="option-letter">D</span>
+                                    <span class="option-label">{{ q.option_d }}</span>
+                                </label>
+                            </div>
+                            {% if q.explanation %}
+                            <div class="question-explanation" id="explanation-{{ q_idx }}" style="display: none;">
+                                💡 <strong>Explanation:</strong> {{ q.explanation }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="quiz-footer-actions">
+                        <button type="submit" class="btn btn-success btn-lg" id="submitQuizBtn">
+                            Submit Answers & Check Score
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function gradeQuiz() {
+    const questionBoxes = document.querySelectorAll('.quiz-question-box');
+    let score = 0;
+    let total = questionBoxes.length;
+
+    questionBoxes.forEach((box, idx) => {
+        const correctOpt = box.getAttribute('data-correct');
+        const selected = document.querySelector(`input[name="q_${idx}"]:checked`);
+        const userChoice = selected ? selected.value : null;
+
+        // Reset previous states
+        ['A', 'B', 'C', 'D'].forEach(opt => {
+            const pill = document.getElementById(`pill-${idx}-${opt}`);
+            if (pill) {
+                pill.classList.remove('option-correct', 'option-wrong');
+            }
+        });
+
+        // Mark the correct option in green
+        const correctPill = document.getElementById(`pill-${idx}-${correctOpt}`);
+        if (correctPill) {
+            correctPill.classList.add('option-correct');
+        }
+
+        // Check user selection
+        if (userChoice === correctOpt) {
+            score++;
+        } else if (userChoice) {
+            const wrongPill = document.getElementById(`pill-${idx}-${userChoice}`);
+            if (wrongPill) {
+                wrongPill.classList.add('option-wrong');
+            }
+        }
+
+        // Show explanation
+        const expl = document.getElementById(`explanation-${idx}`);
+        if (expl) {
+            expl.style.display = 'block';
+        }
+    });
+
+    const percent = Math.round((score / total) * 100);
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const scorePercent = document.getElementById('scorePercent');
+    const scoreFeedback = document.getElementById('scoreFeedback');
+    const scoreBanner = document.getElementById('scoreBanner');
+
+    if (scoreDisplay) scoreDisplay.textContent = `${score} / ${total}`;
+    if (scorePercent) scorePercent.textContent = `${percent}%`;
+
+    if (scoreFeedback) {
+        if (percent === 100) {
+            scoreFeedback.textContent = "Outstanding! Perfect score! You've mastered this topic.";
+        } else if (percent >= 70) {
+            scoreFeedback.textContent = "Great job! Strong grasp with just a couple of review areas.";
+        } else {
+            scoreFeedback.textContent = "Good effort! Check the explanations above to solidify the core concepts.";
+        }
+    }
+
+    if (scoreBanner) {
+        scoreBanner.style.display = 'flex';
+        scoreBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    const submitBtn = document.getElementById('submitQuizBtn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Quiz Completed';
+    }
+}
+
+function retakeQuiz() {
+    const questionBoxes = document.querySelectorAll('.quiz-question-box');
+    questionBoxes.forEach((box, idx) => {
+        ['A', 'B', 'C', 'D'].forEach(opt => {
+            const pill = document.getElementById(`pill-${idx}-${opt}`);
+            if (pill) pill.classList.remove('option-correct', 'option-wrong');
+        });
+        const expl = document.getElementById(`explanation-${idx}`);
+        if (expl) expl.style.display = 'none';
+
+        const radios = document.querySelectorAll(`input[name="q_${idx}"]`);
+        radios.forEach(r => r.checked = false);
+    });
+
+    const scoreBanner = document.getElementById('scoreBanner');
+    if (scoreBanner) scoreBanner.style.display = 'none';
+
+    const submitBtn = document.getElementById('submitQuizBtn');
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Answers & Check Score';
+    }
+}
+</script>
+{% endblock %}
